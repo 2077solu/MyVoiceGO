@@ -1,8 +1,12 @@
 package model
 
 // Dialogue 对话初解析模型
-type Dialogue struct {
+type FirstDialogue struct {
 	Name    string `json:"name"`
+	Id      string `json:"id"`
 	Text    string `json:"text"`
-	Emotion string `json:"emotion"`
+	step    int    `json:"step"`
+	motion  string `json:"motion"`
+	expression string `json:"expression"`
+	model 	string `json:"model"`
 }
