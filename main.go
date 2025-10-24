@@ -22,12 +22,12 @@ func main() {
 	// 创建默认文件读取器
 	fileReader := &parser.DefaultFileReader{}
 
-	// 创建PreDialogue实例，注入依赖
-	preDialogue := parser.NewPreDialogue(fileReader)
+	// 创建TestReader实例，注入依赖
+	testReader := parser.NewTestReader(fileReader)
 
 	// 读取并打印测试数据
 	fmt.Printf("正在读取文件: %s\n", testFilePath)
-	err = preDialogue.ReadAndPrintTestData(testFilePath)
+	err = testReader.ReadAndPrintTestData(testFilePath)
 	if err != nil {
 		fmt.Printf("读取测试数据失败: %v\n", err)
 		return
