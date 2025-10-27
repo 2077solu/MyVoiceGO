@@ -41,5 +41,13 @@ func main() {
 	//if err := p.SaveToJSON(filepath.Join(wd, "output")); err != nil {
 	//    fmt.Printf("保存JSON失败: %v\n", err)
 	//}
-	p.PrintFigures()
+	//p.PrintFigures()
+	
+	// 导出figures到JSON文件
+	outputDir := filepath.Join(wd, "figures_output")
+	if err := p.ExportFiguresToJSON(outputDir); err != nil {
+		fmt.Printf("导出figures到JSON失败: %v\n", err)
+		return
+	}
+	fmt.Printf("成功导出所有figures到目录: %s\n", outputDir)
 }

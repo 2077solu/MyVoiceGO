@@ -1,8 +1,12 @@
 package parser
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"myvoicego/model"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -136,7 +140,7 @@ func (p *DialogueParser) extractNameAndText(dialogueText string) (string, string
 		return "", dialogueText
 	}
 
-	parts := strings.Split(dialogueText, ":")
+	parts := strings.SplitN(dialogueText, ":",2)
 	if len(parts) < 2 {
 		return "", dialogueText
 	}
@@ -181,16 +185,54 @@ func (p *DialogueParser) lineToParts(line string) []string {
 }
 
 // PrintFigures 打印所有figure信息
-func (p *DialogueParser) PrintFigures() {
-	fmt.Println("\n=== 打印所有Figure信息 ===")
-	for _, figure := range p.figures {
-		fmt.Printf("Step: %d\n", figure.Step)
-		fmt.Printf("ID: %s\n", figure.Id)
-		fmt.Printf("Name: %s\n", figure.Name)
-		fmt.Printf("Text: %s\n", figure.Text)
-		fmt.Printf("Motion: %s\n", figure.Motion)
-		fmt.Printf("Expression: %s\n", figure.Expression)
-		fmt.Println("------------------------")
+//func (p *DialogueParser) PrintFigures() {
+//	fmt.Println("\n=== 打印所有Figure信息 ===")
+//	for _, figure := range p.figures {
+//		fmt.Printf("Step: %d\n", figure.Step)
+//		fmt.Printf("ID: %s\n", figure.Id)
+//		fmt.Printf("Name: %s\n", figure.Name)
+//		fmt.Printf("Text: %s\n", figure.Text)
+//		fmt.Printf("Motion: %s\n", figure.Motion)
+//		fmt.Printf("Expression: %s\n", figure.Expression)
+//		fmt.Println("------------------------")
+//	}
+//	fmt.Println("=== Figure信息打印完成 ===\n")
+//}
+
+// ExportFiguresToJSON 将figures按照id分类并分别保存到JSON文件中
+func (p *DialogueParser) ExportFiguresToJSON(outputDir string) error {
+	// 创建输出目录（如果不存在）
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("创建输出目录失败: %v", err)
 	}
-	fmt.Println("=== Figure信息打印完成 ===\n")
+
+	// 按照ID对figures进行分组
+	figureGroups := make(map[string][]model.PreDialogue)
+	for _, figure := range p.figures {
+		if figure.Id == "" {
+			continue // 跳过没有ID的figure
+		}
+		figureGroups[figure.Id] = append(figureGroups[figure.Id], figure)
+	}
+
+	// 为每个ID创建一个JSON文件
+	for id, figures := range figureGroups {
+		// 将figures序列化为JSON
+		jsonData, err := json.MarshalIndent(figures, "", "    ")
+		if err != nil {
+			return fmt.Errorf("序列化JSON失败 (ID: %s): %v", id, err)
+		}
+
+		// 创建文件路径
+		filePath := filepath.Join(outputDir, fmt.Sprintf("%s.json", id))
+
+		// 写入文件
+		if err := ioutil.WriteFile(filePath, jsonData, 0644); err != nil {
+			return fmt.Errorf("写入文件失败 (ID: %s): %v", id, err)
+		}
+
+		fmt.Printf("成功导出ID为 %s 的figures到文件: %s\n", id, filePath)
+	}
+
+	return nil
 }
