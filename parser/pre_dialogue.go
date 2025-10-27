@@ -70,14 +70,14 @@ func (p *DialogueParser) parserFigureChange(line string, step int) {
 			p.tempFigure[figure.Id] = figure
 			p.figures = append(p.figures, figure)
 		}
-	}else {
+	} else {
 		return
 	}
 }
 func (p *DialogueParser) parserDialogue(line string, step int) {
 	line = strings.TrimSuffix(line, ";")
 	content := strings.TrimSpace(line)
-    parts := strings.Fields(content)
+	parts := strings.Fields(content)
 
 	var dialogueText string
 	var Id string
@@ -89,46 +89,59 @@ func (p *DialogueParser) parserDialogue(line string, step int) {
 				break
 			}
 		}
-	}else {
+	} else {
 		return
 	}
 	var name string
 	var text string
-	if strings.Contains(dialogueText, ":") {
+	hasColon := strings.Contains(dialogueText, ":")
+	if hasColon {
 		ingredients := strings.Split(dialogueText, ":")
 		name = ingredients[0]
 		text = ingredients[1]
-	}else {
+	} else {
 		text = dialogueText
 	}
-	//TODO name和text未正确导入
 	if Id != "" {
 		if figure, exists := p.tempFigure[Id]; exists {
-			figure.Name = name
-			figure.Text = text
-			p.tempFigure[Id] = figure
-			for i := len(p.figures) - 1; i >= 0; i-- {
-				if p.figures[i].Id == Id {
-					p.figures[i] = figure
-					break
+			if !hasColon {
+				// 创建新的figure副本，保持原有属性
+				newFigure := figure
+				newFigure.Text = text
+				newFigure.Step = step
+
+				// 更新tempFigure
+				p.tempFigure[Id] = newFigure
+				// 添加到figures列表
+				p.figures = append(p.figures, newFigure)
+			} else {
+				figure.Name = name
+				figure.Text = text
+				figure.Step = step
+				p.tempFigure[Id] = figure
+				for i := len(p.figures) - 1; i >= 0; i-- {
+					if p.figures[i].Id == Id {
+						p.figures[i] = figure
+						break
+					}
 				}
 			}
 		}
 	}
 }
-//TODO figure貌似只能按轮次存储数据
+
+// TODO figure貌似只能按轮次存储数据
 // PrintFigures 打印所有figure信息
 func (p *DialogueParser) PrintFigures() {
-    fmt.Println("\n=== 打印所有Figure信息 ===")
-    for _, figure := range p.figures {
-        fmt.Printf("Step: %d\n", figure.Step)
-        fmt.Printf("ID: %s\n", figure.Id)
-        fmt.Printf("Name: %s\n", figure.Name)
+	fmt.Println("\n=== 打印所有Figure信息 ===")
+	for _, figure := range p.figures {
+		fmt.Printf("Step: %d\n", figure.Step)
+		fmt.Printf("ID: %s\n", figure.Id)
+		fmt.Printf("Name: %s\n", figure.Name)
 		fmt.Printf("Text: %s\n", figure.Text)
-        fmt.Printf("Motion: %s\n", figure.Motion)
-        fmt.Printf("Expression: %s\n", figure.Expression)
-        fmt.Println("------------------------")
-    }
-    fmt.Println("=== Figure信息打印完成 ===\n")
+		fmt.Printf("Motion: %s\n", figure.Motion)
+		fmt.Printf("Expression: %s\n", figure.Expression)
+		fmt.Println("------------------------")
+	}
+	fmt.Println("=== Figure信息打印完成 ===\n")
 }
-
