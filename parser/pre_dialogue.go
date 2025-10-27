@@ -46,6 +46,7 @@ func (p *DialogueParser) ParseDialogue(line string, step int) {
 }
 
 func (p *DialogueParser) parserFigureChange(line string, step int) {
+	line = strings.TrimSuffix(line, ";")
 	content := strings.TrimSpace(line)
 	if strings.Contains(content, "-motion=") || strings.Contains(content, "-expression=") {
 		parts := strings.Fields(content)
@@ -74,16 +75,17 @@ func (p *DialogueParser) parserFigureChange(line string, step int) {
 	}
 }
 func (p *DialogueParser) parserDialogue(line string, step int) {
+	line = strings.TrimSuffix(line, ";")
 	content := strings.TrimSpace(line)
     parts := strings.Fields(content)
 
 	var dialogueText string
-	var figureId string
+	var Id string
 	if len(parts) > 1 {
 		dialogueText = parts[0]
 		for _, part := range parts {
 			if strings.HasPrefix(part, "-figureId=") {
-				figureId = strings.TrimPrefix(part, "-figureId=")
+				Id = strings.TrimPrefix(part, "-figureId=")
 				break
 			}
 		}
@@ -100,13 +102,13 @@ func (p *DialogueParser) parserDialogue(line string, step int) {
 		text = dialogueText
 	}
 	//TODO name和text未正确导入
-	if figureId != "" {
-		if figure, ok := p.tempFigure[figureId]; ok {
+	if Id != "" {
+		if figure, exists := p.tempFigure[Id]; exists {
 			figure.Name = name
 			figure.Text = text
-			p.tempFigure[figureId] = figure
+			p.tempFigure[Id] = figure
 			for i := len(p.figures) - 1; i >= 0; i-- {
-				if p.figures[i].Id == figureId {
+				if p.figures[i].Id == Id {
 					p.figures[i] = figure
 					break
 				}
