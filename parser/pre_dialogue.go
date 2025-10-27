@@ -68,7 +68,6 @@ func (p *DialogueParser) parserFigureChange(line string, step int) {
 		}
 		if figure.Id != "" {
 			p.tempFigure[figure.Id] = figure
-			p.figures = append(p.figures, figure)
 		}
 	} else {
 		return
@@ -102,33 +101,52 @@ func (p *DialogueParser) parserDialogue(line string, step int) {
 	} else {
 		text = dialogueText
 	}
+
 	if Id != "" {
 		if figure, exists := p.tempFigure[Id]; exists {
-			if !hasColon {
-				// 创建新的figure副本，保持原有属性
-				newFigure := figure
-				newFigure.Text = text
-				newFigure.Step = step
-
-				// 更新tempFigure
-				p.tempFigure[Id] = newFigure
-				// 添加到figures列表
-				p.figures = append(p.figures, newFigure)
-			} else {
+			figure.Text = text
+			figure.Step = step
+			if hasColon {
 				figure.Name = name
-				figure.Text = text
-				figure.Step = step
 				p.tempFigure[Id] = figure
-				for i := len(p.figures) - 1; i >= 0; i-- {
-					if p.figures[i].Id == Id {
-						p.figures[i] = figure
-						break
-					}
+			}
+			p.figures = append(p.figures, figure)
+			for i := len(p.figures) - 1; i >= 0; i-- {
+				if p.figures[i].Id == Id {
+					p.figures[i] = figure
+					break
 				}
+			}
 			}
 		}
 	}
-}
+//	if Id != "" {
+//		if figure, exists := p.tempFigure[Id]; exists {
+//			if !hasColon {
+//				// 创建新的figure副本，保持原有属性
+//				newFigure := figure
+//				newFigure.Text = text
+//				newFigure.Step = step
+//
+//				// 更新tempFigure
+//				p.tempFigure[Id] = newFigure
+//				// 添加到figures列表
+//				p.figures = append(p.figures, newFigure)
+//			} else {
+//				figure.Name = name
+//				figure.Text = text
+//				figure.Step = step
+//				p.tempFigure[Id] = figure
+//				for i := len(p.figures) - 1; i >= 0; i-- {
+//					if p.figures[i].Id == Id {
+//						p.figures[i] = figure
+//						break
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
 
 // TODO figure貌似只能按轮次存储数据
 // PrintFigures 打印所有figure信息
