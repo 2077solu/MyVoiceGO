@@ -40,12 +40,6 @@ func main() {
 		p.ParseDialogue(line, step)
 	}
 
-	// 保存解析结果到JSON
-	//if err := p.SaveToJSON(filepath.Join(wd, "output")); err != nil {
-	//    fmt.Printf("保存JSON失败: %v\n", err)
-	//}
-	//p.PrintFigures()
-
 	// 导出figures到JSON文件
 	outputDir := filepath.Join(wd, "figures_output")
 	if err := p.ExportFiguresToJSON(outputDir); err != nil {

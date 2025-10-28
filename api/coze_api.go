@@ -331,27 +331,50 @@ func (api *CozeAPI) AnalyzeEmotions(dialogues []model.PreDialogue) ([]model.PreD
 // extractFinalContent 从流式响应中提取最终内容
 func extractFinalContent(lines []string) (string, error) {
 	for i, line := range lines {
-		// 检查是否是事件行
-		if strings.HasPrefix(line, "event:") {
-			event := strings.TrimSpace(strings.TrimPrefix(line, "event:"))
-			// 如果是完成事件
-			if event == EventCompleted && i+1 < len(lines) {
-				// 检查下一行是否是数据行
-				nextLine := lines[i+1]
-				if strings.HasPrefix(nextLine, "data:") {
-					// 解析数据行
-					dataStr := strings.TrimSpace(strings.TrimPrefix(nextLine, "data:"))
-					var data struct {
-						Type    string `json:"type"`
-						Content string `json:"content"`
-					}
-					if err := json.Unmarshal([]byte(dataStr), &data); err == nil && data.Type == TypeAnswer {
-						return data.Content, nil
-					}
-				}
-			}
+		if !strings.HasPrefix(line, "event:") {
+			continue
 		}
+
+		event := strings.TrimSpace(strings.TrimPrefix(line, "event:"))
+		if event != EventCompleted {
+			continue
+		}
+
+		if i+1 >= len(lines) {
+			continue
+		}
+
+		nextLine := lines[i+1]
+		if !strings.HasPrefix(nextLine, "data:") {
+			continue
+		}
+
+		dataStr := strings.TrimSpace(strings.TrimPrefix(nextLine, "data:"))
+		content, err := parseDataContent(dataStr)
+		if err != nil {
+			continue
+		}
+
+		return content, nil
 	}
 
 	return "", fmt.Errorf("未找到有效的情绪分析结果")
+}
+
+// parseDataContent 解析数据内容
+func parseDataContent(dataStr string) (string, error) {
+	var data struct {
+		Type    string `json:"type"`
+		Content string `json:"content"`
+	}
+
+	if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
+		return "", err
+	}
+
+	if data.Type != TypeAnswer {
+		return "", fmt.Errorf("不是答案类型")
+	}
+
+	return data.Content, nil
 }

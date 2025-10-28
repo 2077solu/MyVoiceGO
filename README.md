@@ -35,5 +35,5 @@
 # 项目依托
 WebGal  
 GPT-sovits  
-Fyne
+Fyne(可视化考虑中)  
 Coze

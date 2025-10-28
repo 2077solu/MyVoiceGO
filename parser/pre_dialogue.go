@@ -183,21 +183,6 @@ func (p *DialogueParser) lineToParts(line string) []string {
 	return strings.Fields(content)
 }
 
-// PrintFigures 打印所有figure信息
-//func (p *DialogueParser) PrintFigures() {
-//	fmt.Println("\n=== 打印所有Figure信息 ===")
-//	for _, figure := range p.figures {
-//		fmt.Printf("Step: %d\n", figure.Step)
-//		fmt.Printf("ID: %s\n", figure.Id)
-//		fmt.Printf("Name: %s\n", figure.Name)
-//		fmt.Printf("Text: %s\n", figure.Text)
-//		fmt.Printf("Motion: %s\n", figure.Motion)
-//		fmt.Printf("Expression: %s\n", figure.Expression)
-//		fmt.Println("------------------------")
-//	}
-//	fmt.Println("=== Figure信息打印完成 ===\n")
-//}
-
 // ExportFiguresToJSON 将figures按照id分类并分别保存到JSON文件中
 func (p *DialogueParser) ExportFiguresToJSON(outputDir string) error {
 	// 创建输出目录（如果不存在）
