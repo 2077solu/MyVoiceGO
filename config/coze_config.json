@@ -1,0 +1,8 @@
+{
+    "api_url": "https://api.coze.cn/v3/chat",
+    "token": "pat_Y1PpuYAaz51Iaw1pcl40dOlTGQUheqsdhHGZHyIfyPMMoTwiYkLYZWMyWtWfwCLA",
+    "bot_id": "7565894141923196964",
+    "user_id": "master",
+    "stream": true,
+    "auto_save_history": false
+}

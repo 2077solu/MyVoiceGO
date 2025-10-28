@@ -3,13 +3,11 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"myvoicego/model"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
 
 // LineType 定义行类型
 type LineType int
@@ -96,6 +94,7 @@ func (p *DialogueParser) parseFigurePart(figure *model.PreDialogue, part string)
 		figure.Expression = strings.TrimPrefix(part, "-expression=")
 	}
 }
+
 // parseDialogue 解析对话内容
 func (p *DialogueParser) parseDialogueLine(line string, step int) {
 	dialogueText, figureId := p.extractDialogueInfo(line)
@@ -140,7 +139,7 @@ func (p *DialogueParser) extractNameAndText(dialogueText string) (string, string
 		return "", dialogueText
 	}
 
-	parts := strings.SplitN(dialogueText, ":",2)
+	parts := strings.SplitN(dialogueText, ":", 2)
 	if len(parts) < 2 {
 		return "", dialogueText
 	}
@@ -227,7 +226,7 @@ func (p *DialogueParser) ExportFiguresToJSON(outputDir string) error {
 		filePath := filepath.Join(outputDir, fmt.Sprintf("%s.json", id))
 
 		// 写入文件
-		if err := ioutil.WriteFile(filePath, jsonData, 0644); err != nil {
+		if err := os.WriteFile(filePath, jsonData, 0644); err != nil {
 			return fmt.Errorf("写入文件失败 (ID: %s): %v", id, err)
 		}
 
