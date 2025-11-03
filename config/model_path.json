@@ -1,0 +1,71 @@
+[
+  {
+    "name": "爱音",
+    "aliases": [
+      "anon",
+      "千早爱音"
+    ],
+    "Models": [
+      {
+        "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/anon-e30.ckpt",
+        "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/anon_e8_s184.pth"
+      }
+    ]
+  },
+  {
+    "name": "素世",
+    "aliases": [
+      "soyo",
+      "长崎素世"
+    ],
+    "Models": [
+      {
+        "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/soyo-e30.ckpt",
+        "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/soyo_e4_s56.pth"
+      },
+      {
+        "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/soyo-yami-e30.ckpt",
+        "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/soyo-yami_e4_s88.pth"
+      }
+    ]
+  },
+  {
+  "name": "立希",
+  "aliases": [
+    "taki",
+    "椎名立希"
+  ],
+  "Models": [
+    {
+      "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/taki-e20.ckpt",
+      "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/taki_e8_s216.pth"
+    }
+  ]
+},
+  {
+    "name": "灯",
+    "aliases": [
+      "tomori",
+      "高松灯"
+      ],
+    "Models": [
+      {
+        "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/tomori-e30.ckpt",
+        "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/tomori_e8_s184.pth"
+      }
+    ]
+  },
+  {
+    "name": "乐奈",
+    "aliases": [
+      "rana",
+      "要乐奈"
+    ],
+    "Models": [
+      {
+        "GPT_weights": "E:/GPT-SoVITS-v2pro-20250604/GPT_weights/rana-e20.ckpt",
+        "SoVITS_weights": "E:/GPT-SoVITS-v2pro-20250604/SoVITS_weights/rana_e10_s250.pth"
+      }
+    ]
+  }
+]
