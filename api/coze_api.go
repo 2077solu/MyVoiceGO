@@ -299,17 +299,17 @@ func (api *CozeAPI) AnalyzeTones(dialogues []model.PreDialogue) ([]model.PreDial
 		return nil, err
 	}
 
-	// 打印API返回的内容，以便调试
-	fmt.Printf("API返回的内容: %s", finalContent)
-
-	// 解析最终内容为带有语气的对话对象
-	var toneDialogue model.PreDialogue
-	if err := json.Unmarshal([]byte(finalContent), &toneDialogue); err != nil {
-		return nil, fmt.Errorf("解析语气分析结果失败: %v", err)
+	// 首先尝试解析为数组
+	var toneDialogues []model.PreDialogue
+	if err := json.Unmarshal([]byte(finalContent), &toneDialogues); err != nil {
+		// 如果解析数组失败，尝试解析为单个对象
+		var singleToneDialogue model.PreDialogue
+		if err := json.Unmarshal([]byte(finalContent), &singleToneDialogue); err != nil {
+			return nil, fmt.Errorf("解析语气分析结果失败: %v", err)
+		}
+		// 将单个对象转换为数组
+		toneDialogues = []model.PreDialogue{singleToneDialogue}
 	}
-
-	// 将单个对象转换为数组，以便后续处理
-	toneDialogues := []model.PreDialogue{toneDialogue}
 
 	// 创建step到tone的映射
 	stepToTone := make(map[int]string, len(toneDialogues))
