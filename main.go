@@ -31,7 +31,6 @@ func main() {
 		fmt.Printf("读取文件失败: %v\n", err)
 		return
 	}
-
 	// 按行分割内容
 	lines := strings.Split(string(content), "\n")
 

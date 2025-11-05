@@ -16,22 +16,22 @@ import (
 
 // 常量定义
 const (
-	// API相关常量
+	// DefaultAPIURL API相关常量
 	DefaultAPIURL   = "https://api.coze.cn/v3/chat"
 	RequestTimeout  = 30 * time.Second
 	MaxResponseSize = 10 << 20 // 10MB
 
-	// 请求头常量
+	// HeaderAuth 请求头常量
 	HeaderAuth        = "Authorization"
 	HeaderContentType = "Content-Type"
 	ContentTypeJSON   = "application/json"
 
-	// 消息类型常量
+	// RoleUser 消息类型常量
 	RoleUser        = "user"
 	TypeToolOutput  = "tool_output"
 	ContentTypeText = "text"
 
-	// 事件类型常量
+	// EventCompleted 事件类型常量
 	EventCompleted = "conversation.message.completed"
 	TypeAnswer     = "answer"
 )
