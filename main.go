@@ -77,14 +77,14 @@ func main() {
 			continue
 		}
 
-		// 进行情绪分析
-		updatedDialogues, err := cozeAPI.AnalyzeEmotions(dialogues)
+		// 进行语气分析
+		updatedDialogues, err := cozeAPI.AnalyzeTones(dialogues)
 		if err != nil {
-			fmt.Printf("情绪分析失败 (%s): %v\n", figureFile, err)
+			fmt.Printf("语气分析失败 (%s): %v\n", figureFile, err)
 			continue
 		}
 
-		// 将带有情绪的对话重新序列化为JSON
+		// 将带有语气的对话重新序列化为JSON
 		updatedJSON, err := json.MarshalIndent(updatedDialogues, "", "    ")
 		if err != nil {
 			fmt.Printf("序列化更新后的对话失败 (%s): %v\n", figureFile, err)

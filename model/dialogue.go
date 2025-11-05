@@ -9,5 +9,5 @@ type PreDialogue struct {
 	Motion     string `json:"motion"`
 	Expression string `json:"expression"`
 	Model      string `json:"model"`
-	Emotion    string `json:"emotion"`
+	Tone       string `json:"tone"`
 }

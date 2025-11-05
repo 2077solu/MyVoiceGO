@@ -130,7 +130,7 @@ type Request struct {
 	UserID             string    `json:"user_id"`
 }
 
-// SendDialogueToCoze 发送对话内容到 Coze API 进行情感解析
+// SendDialogueToCoze 发送对话内容到 Coze API 进行语气解析
 func (api *CozeAPI) SendDialogueToCoze(dialogueJSON string) ([]byte, error) {
 	// 验证输入
 	if dialogueJSON == "" {
@@ -259,19 +259,19 @@ func ListAvailableDialogues(figuresDir string) ([]string, error) {
 	return dialogues, nil
 }
 
-// EmotionResponse 表示Coze API返回的情绪分析响应
-type EmotionResponse struct {
-	Emotions []EmotionResult `json:"emotions"`
+// ToneResponse 表示Coze API返回的语气分析响应
+type ToneResponse struct {
+	Tones []ToneResult `json:"tones"`
 }
 
-// EmotionResult 表示单个情绪分析结果
-type EmotionResult struct {
-	Index   int    `json:"index"`
-	Emotion string `json:"emotion"`
+// ToneResult 表示单个语气分析结果
+type ToneResult struct {
+	Index int    `json:"index"`
+	Tone  string `json:"tone"`
 }
 
-// AnalyzeEmotions 分析对话的情绪
-func (api *CozeAPI) AnalyzeEmotions(dialogues []model.PreDialogue) ([]model.PreDialogue, error) {
+// AnalyzeTones 分析对话的语气
+func (api *CozeAPI) AnalyzeTones(dialogues []model.PreDialogue) ([]model.PreDialogue, error) {
 	// 验证输入
 	if len(dialogues) == 0 {
 		return nil, fmt.Errorf("对话列表不能为空")
@@ -299,24 +299,30 @@ func (api *CozeAPI) AnalyzeEmotions(dialogues []model.PreDialogue) ([]model.PreD
 		return nil, err
 	}
 
-	// 解析最终内容为带有情绪的对话数组
-	var emotionDialogues []model.PreDialogue
-	if err := json.Unmarshal([]byte(finalContent), &emotionDialogues); err != nil {
-		return nil, fmt.Errorf("解析情绪分析结果失败: %v", err)
+	// 打印API返回的内容，以便调试
+	fmt.Printf("API返回的内容: %s", finalContent)
+
+	// 解析最终内容为带有语气的对话对象
+	var toneDialogue model.PreDialogue
+	if err := json.Unmarshal([]byte(finalContent), &toneDialogue); err != nil {
+		return nil, fmt.Errorf("解析语气分析结果失败: %v", err)
 	}
 
-	// 创建step到emotion的映射
-	stepToEmotion := make(map[int]string, len(emotionDialogues))
-	for _, dialogue := range emotionDialogues {
-		if dialogue.Emotion != "" {
-			stepToEmotion[dialogue.Step] = dialogue.Emotion
+	// 将单个对象转换为数组，以便后续处理
+	toneDialogues := []model.PreDialogue{toneDialogue}
+
+	// 创建step到tone的映射
+	stepToTone := make(map[int]string, len(toneDialogues))
+	for _, dialogue := range toneDialogues {
+		if dialogue.Tone != "" {
+			stepToTone[dialogue.Step] = dialogue.Tone
 		}
 	}
 
-	// 更新原始对话的情绪
+	// 更新原始对话的语气
 	for i := range dialogues {
-		if emotion, exists := stepToEmotion[dialogues[i].Step]; exists {
-			dialogues[i].Emotion = emotion
+		if tone, exists := stepToTone[dialogues[i].Step]; exists {
+			dialogues[i].Tone = tone
 		}
 	}
 
