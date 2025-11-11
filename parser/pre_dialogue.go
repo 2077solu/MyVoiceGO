@@ -64,16 +64,36 @@ func (p *DialogueParser) parseFigureChange(line string, step int) {
 		return
 	}
 
-	figure := model.PreDialogue{Step: step}
 	parts := p.lineToParts(line)
+	var figureId string
 
+	// 首先获取figureId
+	for _, part := range parts {
+		if strings.HasPrefix(part, "-id=") {
+			figureId = strings.TrimPrefix(part, "-id=")
+			break
+		}
+	}
+
+	if figureId == "" {
+		return
+	}
+
+	// 获取已存在的figure或创建新的
+	figure, exists := p.tempFigure[figureId]
+	if !exists {
+		figure = model.PreDialogue{Step: step}
+	} else {
+		figure.Step = step
+	}
+
+	// 只更新changeFigure行中指定的字段
 	for _, part := range parts {
 		p.parseFigurePart(&figure, part)
 	}
 
-	if figure.Id != "" {
-		p.tempFigure[figure.Id] = figure
-	}
+	// 更新tempFigure
+	p.tempFigure[figureId] = figure
 }
 
 // isValidFigureChangeLine 检查是否为有效的角色变更行
