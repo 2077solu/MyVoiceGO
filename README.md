@@ -36,7 +36,7 @@
 ### 循环直到完成
 
 # 项目依托
-WebGal  
-GPT-sovits  
-Fyne(可视化考虑中)  
+[WebGal](https://github.com/OpenWebGAL/WebGAL_Terre)  
+[GPT-sovits](https://github.com/RVC-Boss/GPT-SoVITS)  
+[Fyne](https://github.com/fyne-io/fyne)  
 Coze
