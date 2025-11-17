@@ -38,6 +38,12 @@ func main() {
 	// 打印结果
 	fmt.Println(jsonData)
 
+	// 在main函数中添加
+	if err := utils.StartGPTSvits(); err != nil {
+		fmt.Printf("启动GPT-SoVITS失败: %v\n", err)
+		return
+	}
+
 	// 确保输出目录存在
 	storagePath := filepath.Join(wd, "reference_audio_storage")
 	if err := os.MkdirAll(storagePath, 0755); err != nil {
