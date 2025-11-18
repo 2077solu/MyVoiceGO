@@ -10,6 +10,7 @@ import (
 	"myvoicego/api"
 	"myvoicego/model"
 	"myvoicego/parser"
+	"myvoicego/ui"
 	"myvoicego/utils"
 )
 
@@ -141,4 +142,7 @@ func main() {
 		fmt.Printf("保存文件时出错: %v\n", err)
 		return
 	}
+
+	// 启动UI界面
+	ui.MainView()
 }
