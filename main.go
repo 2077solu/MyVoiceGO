@@ -21,44 +21,6 @@ func main() {
 		return
 	}
 
-	// 确保基础目录存在
-	referenceAudioPath := filepath.Join(wd, "reference_audio")
-	if _, err := os.Stat(referenceAudioPath); os.IsNotExist(err) {
-		fmt.Printf("reference_audio 目录不存在: %v\n", err)
-		return
-	}
-
-	// 调用方法获取JSON格式的音频列表
-	jsonData, err := utils.ListReferenceAudioFiles(referenceAudioPath)
-	if err != nil {
-		fmt.Printf("获取音频列表失败: %v\n", err)
-		return
-	}
-
-	// 打印结果
-	fmt.Println(jsonData)
-
-	// 在main函数中添加
-	if err := utils.StartGPTSvits(); err != nil {
-		fmt.Printf("启动GPT-SoVITS失败: %v\n", err)
-		return
-	}
-
-	// 确保输出目录存在
-	storagePath := filepath.Join(wd, "reference_audio_storage")
-	if err := os.MkdirAll(storagePath, 0755); err != nil {
-		fmt.Printf("创建输出目录失败: %v\n", err)
-		return
-	}
-
-	// 保存到文件
-	outputPath := filepath.Join(storagePath, "爱音.json")
-	err = utils.SaveReferenceAudioListToFile(referenceAudioPath, outputPath)
-	if err != nil {
-		fmt.Printf("保存文件时出错: %v\n", err)
-		return
-	}
-
 	// 工作目录已在上面获取
 	testFilePath := filepath.Join(wd, "test.txt")
 	fmt.Printf("正在读取文件: %s\n", testFilePath)
@@ -140,5 +102,43 @@ func main() {
 		}
 
 		fmt.Printf("成功更新角色 %s 的情绪分析结果\n", figureFile)
+	}
+
+	// 确保基础目录存在
+	referenceAudioPath := filepath.Join(wd, "reference_audio")
+	if _, err := os.Stat(referenceAudioPath); os.IsNotExist(err) {
+		fmt.Printf("reference_audio 目录不存在: %v\n", err)
+		return
+	}
+
+	// 调用方法获取JSON格式的音频列表
+	jsonData, err := utils.ListReferenceAudioFiles(referenceAudioPath)
+	if err != nil {
+		fmt.Printf("获取音频列表失败: %v\n", err)
+		return
+	}
+
+	// 打印结果
+	fmt.Println(jsonData)
+
+	// 在main函数中添加
+	if err := utils.StartGPTSvits(); err != nil {
+		fmt.Printf("启动GPT-SoVITS失败: %v\n", err)
+		return
+	}
+
+	// 确保输出目录存在
+	storagePath := filepath.Join(wd, "reference_audio_storage")
+	if err := os.MkdirAll(storagePath, 0755); err != nil {
+		fmt.Printf("创建输出目录失败: %v\n", err)
+		return
+	}
+
+	// 保存到文件
+	outputPath := filepath.Join(storagePath, "爱音.json")
+	err = utils.SaveReferenceAudioListToFile(referenceAudioPath, outputPath)
+	if err != nil {
+		fmt.Printf("保存文件时出错: %v\n", err)
+		return
 	}
 }

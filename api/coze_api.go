@@ -159,29 +159,41 @@ func (api *CozeAPI) SendDialogueToCoze(dialogueJSON string) ([]byte, error) {
 		return nil, fmt.Errorf("序列化请求失败: %v", err)
 	}
 
-	// 创建带上下文的 HTTP 请求
-	ctx, cancel := context.WithTimeout(context.Background(), RequestTimeout)
-	defer cancel()
+	// 尝试最多3次请求
+	var body []byte
+	var resp *http.Response
+	for attempt := 1; attempt <= 3; attempt++ {
+		// 创建带上下文的 HTTP 请求，每次尝试都使用新的超时
+		ctx, cancel := context.WithTimeout(context.Background(), RequestTimeout)
+		defer cancel()
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", api.BaseURL, bytes.NewBuffer(reqBody))
-	if err != nil {
-		return nil, fmt.Errorf("创建请求失败: %v", err)
-	}
+		httpReq, err := http.NewRequestWithContext(ctx, "POST", api.BaseURL, bytes.NewBuffer(reqBody))
+		if err != nil {
+			return nil, fmt.Errorf("创建请求失败: %v", err)
+		}
 
-	// 设置请求头
-	httpReq.Header.Set(HeaderAuth, "Bearer "+api.BearerToken)
-	httpReq.Header.Set(HeaderContentType, ContentTypeJSON)
+		// 设置请求头
+		httpReq.Header.Set(HeaderAuth, "Bearer "+api.BearerToken)
+		httpReq.Header.Set(HeaderContentType, ContentTypeJSON)
 
-	// 发送请求
-	resp, err := api.client.Do(httpReq)
-	if err != nil {
-		return nil, fmt.Errorf("发送请求失败: %v", err)
+		// 发送请求
+		resp, err = api.client.Do(httpReq)
+		if err != nil {
+			if attempt < 3 {
+				fmt.Printf("请求失败 (尝试 %d/3): %v，正在重试...\n", attempt, err)
+				continue
+			}
+			return nil, fmt.Errorf("发送请求失败: %v", err)
+		}
+
+		// 请求成功，跳出循环
+		break
 	}
 	defer resp.Body.Close()
 
 	// 限制响应体大小
 	limitedReader := io.LimitReader(resp.Body, MaxResponseSize)
-	body, err := io.ReadAll(limitedReader)
+	body, err = io.ReadAll(limitedReader)
 	if err != nil {
 		return nil, fmt.Errorf("读取响应失败: %v", err)
 	}
@@ -283,6 +295,9 @@ func (api *CozeAPI) AnalyzeTones(dialogues []model.PreDialogue) ([]model.PreDial
 		return nil, fmt.Errorf("序列化对话失败: %v", err)
 	}
 
+	// 记录请求开始时间
+	fmt.Printf("开始发送情绪分析请求，对话数量: %d\n", len(dialogues))
+
 	// 发送请求到Coze API
 	response, err := api.SendDialogueToCoze(string(dialogueJSON))
 	if err != nil {
@@ -320,11 +335,15 @@ func (api *CozeAPI) AnalyzeTones(dialogues []model.PreDialogue) ([]model.PreDial
 	}
 
 	// 更新原始对话的语气
+	updatedCount := 0
 	for i := range dialogues {
 		if tone, exists := stepToTone[dialogues[i].Step]; exists {
 			dialogues[i].Tone = tone
+			updatedCount++
 		}
 	}
+
+	fmt.Printf("情绪分析完成，更新了 %d/%d 条对话的语气\n", updatedCount, len(dialogues))
 
 	return dialogues, nil
 }

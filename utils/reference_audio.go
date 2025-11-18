@@ -9,23 +9,16 @@ import (
 )
 
 const (
-	SubModel0      = "0"
-	SubModel1      = "1"
 	DirPermission  = 0755
 	FilePermission = 0644
 )
 
-// 支持的音频文件扩展名映射，用于快速查找
-var supportedAudioExts = map[string]struct{}{
-	".mp3":  {},
-	".wav":  {},
-	".ogg":  {},
-	".flac": {},
-	".m4a":  {},
-	".aac":  {},
+// 支持的音频文件扩展名
+var audioExts = map[string]struct{}{
+	".mp3": {}, ".wav": {}, ".ogg": {}, ".flac": {}, ".m4a": {}, ".aac": {},
 }
 
-// AudioRefPath 音频文件路径结构
+// AudioRefPath 音频文件路径
 type AudioRefPath struct {
 	Path string `json:"path"`
 }
@@ -36,11 +29,16 @@ type AudioRefTone struct {
 	Paths []AudioRefPath `json:"paths"`
 }
 
+// AudioRefSubDir 子模型对应的语气列表
+type AudioRefSubDir struct {
+	AudioId string         `json:"audioid"`
+	Tones   []AudioRefTone `json:"tones"`
+}
+
 // AudioRefModel 模型对应的语气列表
 type AudioRefModel struct {
-	ModelID string         `json:"model_id"`
-	Model   string         `json:"model"`
-	Tones   []AudioRefTone `json:"tones"`
+	Model   string           `json:"model"`
+	SubDirs []AudioRefSubDir `json:"subdirs"`
 }
 
 // AudioRefList 所有模型的音频参考列表
@@ -48,69 +46,48 @@ type AudioRefList struct {
 	Models []AudioRefModel `json:"models"`
 }
 
-// normalizePath 统一路径格式为Unix风格
+// normalizePath 统一路径格式为Unix风格，并确保使用绝对路径
 func normalizePath(path string) string {
-	return filepath.ToSlash(path)
+	p, _ := filepath.Abs(path)
+	return filepath.ToSlash(p)
 }
 
 // isAudioFile 检查文件是否为支持的音频格式
-func isAudioFile(fileName string) bool {
-	ext := strings.ToLower(filepath.Ext(fileName))
-	_, supported := supportedAudioExts[ext]
-	return supported
+func isAudioFile(name string) bool {
+	_, ok := audioExts[strings.ToLower(filepath.Ext(name))]
+	return ok
 }
 
-// readDirectory 安全读取目录内容并返回详细错误信息
-func readDirectory(path string) ([]os.DirEntry, error) {
-	entries, err := os.ReadDir(path)
+// readDir 读取目录内容
+func readDir(path string) ([]os.DirEntry, error) {
+	d, err := os.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("读取目录失败 %q: %w", path, err)
 	}
-	return entries, nil
+	return d, nil
 }
 
-// getAudioFilesInDir 获取指定目录下的所有音频文件路径
-func getAudioFilesInDir(dirPath string) ([]AudioRefPath, error) {
-	entries, err := readDirectory(dirPath)
+// getAudioFiles 获取目录下的音频文件，使用绝对路径
+func getAudioFiles(dir string) ([]AudioRefPath, error) {
+	entries, err := readDir(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	audioPaths := make([]AudioRefPath, 0, len(entries))
+	var paths []AudioRefPath
 	for _, entry := range entries {
-		if entry.IsDir() {
-			continue // 跳过子目录
+		if entry.IsDir() || !isAudioFile(entry.Name()) {
+			continue
 		}
-
-		fileName := entry.Name()
-		if !isAudioFile(fileName) {
-			continue // 跳过非音频文件
-		}
-
-		audioPaths = append(audioPaths, AudioRefPath{
-			Path: normalizePath(fileName),
-		})
+		path := filepath.Join(dir, entry.Name())
+		paths = append(paths, AudioRefPath{Path: normalizePath(path)})
 	}
-
-	return audioPaths, nil
+	return paths, nil
 }
 
-// hasSubModels 检查是否存在子模型目录(0或1)
-func hasSubModels(entries []os.DirEntry) bool {
-	for _, entry := range entries {
-		if entry.IsDir() {
-			name := entry.Name()
-			if name == SubModel0 || name == SubModel1 {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// collectTones 从基础目录收集语气信息(子目录作为语气名)
+// collectTones 收集语气信息
 func collectTones(baseDir string) ([]AudioRefTone, error) {
-	entries, err := readDirectory(baseDir)
+	entries, err := readDir(baseDir)
 	if err != nil {
 		return nil, err
 	}
@@ -121,102 +98,88 @@ func collectTones(baseDir string) ([]AudioRefTone, error) {
 			continue
 		}
 
-		toneName := entry.Name()
-		tonePath := filepath.Join(baseDir, toneName)
-
-		audioPaths, err := getAudioFilesInDir(tonePath)
-		if err != nil || len(audioPaths) == 0 {
-			continue // 忽略无音频或读取失败的语气目录
+		name := entry.Name()
+		path := filepath.Join(baseDir, name)
+		paths, err := getAudioFiles(path)
+		if err != nil || len(paths) == 0 {
+			continue
 		}
 
-		tones = append(tones, AudioRefTone{
-			Tone:  toneName,
-			Paths: audioPaths,
-		})
+		tones = append(tones, AudioRefTone{Tone: name, Paths: paths})
 	}
-
 	return tones, nil
 }
 
-// processSubModels 处理包含子模型(0/1)的目录结构
-func processSubModels(modelPath string) ([]AudioRefTone, error) {
-	entries, err := readDirectory(modelPath)
+// getSubDirs 获取模型的子目录和语气
+func getSubDirs(rootDir, modelName string) ([]AudioRefSubDir, error) {
+	modelPath := filepath.Join(rootDir, modelName)
+	entries, err := readDir(modelPath)
 	if err != nil {
 		return nil, err
 	}
 
-	var allTones []AudioRefTone
+	var subDirs []AudioRefSubDir
+	// 检查是否有子目录
+	hasSubDirs := false
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
 
-		subModelName := entry.Name()
-		if subModelName != SubModel0 && subModelName != SubModel1 {
-			continue // 只处理指定的子模型目录
-		}
-
-		subModelPath := filepath.Join(modelPath, subModelName)
-		tones, err := collectTones(subModelPath)
+		hasSubDirs = true
+		name := entry.Name()
+		path := filepath.Join(modelPath, name)
+		tones, err := collectTones(path)
 		if err != nil {
-			continue // 忽略单个子模型的错误
+			continue
 		}
-		allTones = append(allTones, tones...)
+
+		subDirs = append(subDirs, AudioRefSubDir{AudioId: name, Tones: tones})
 	}
 
-	return allTones, nil
-}
-
-// getTonesInModel 获取指定模型目录下的所有语气信息
-func getTonesInModel(rootDir, modelName string) (string, []AudioRefTone, error) {
-	modelPath := filepath.Join(rootDir, modelName)
-	entries, err := readDirectory(modelPath)
-	if err != nil {
-		return "", nil, err
+	// 没有子目录，直接从模型目录收集语气
+	if !hasSubDirs {
+		tones, err := collectTones(modelPath)
+		if err != nil {
+			return nil, err
+		}
+		subDirs = append(subDirs, AudioRefSubDir{AudioId: "", Tones: tones})
 	}
 
-	// 无论哪种结构，默认使用SubModel0作为模型ID
-	modelID := SubModel0
-	var tones []AudioRefTone
-
-	if hasSubModels(entries) {
-		tones, err = processSubModels(modelPath)
-	} else {
-		tones, err = collectTones(modelPath)
-	}
-
-	if err != nil {
-		return "", nil, err
-	}
-
-	return modelID, tones, nil
+	return subDirs, nil
 }
 
 // BuildReferenceAudioList 构建所有模型的音频参考列表
 func BuildReferenceAudioList(rootDir string) ([]AudioRefModel, error) {
-	entries, err := readDirectory(rootDir)
+	entries, err := readDir(rootDir)
 	if err != nil {
 		return nil, err
 	}
 
-	models := make([]AudioRefModel, 0, len(entries))
+	var models []AudioRefModel
 	for _, entry := range entries {
 		if !entry.IsDir() {
-			continue // 只处理目录作为模型
+			continue
 		}
 
-		modelName := entry.Name()
-		modelID, tones, err := getTonesInModel(rootDir, modelName)
+		name := entry.Name()
+		subDirs, err := getSubDirs(rootDir, name)
 		if err != nil {
-			continue // 忽略处理失败的模型
+			continue
 		}
 
-		if len(tones) > 0 {
-			models = append(models, AudioRefModel{
-				ModelID: modelID,
-				Model:   modelName,
-				Tones:   tones,
-			})
+		// 检查是否有语气数据
+		hasTones := false
+		for _, subDir := range subDirs {
+			if len(subDir.Tones) > 0 {
+				hasTones = true
+				break
+			}
+		}
+
+		if hasTones {
+			models = append(models, AudioRefModel{Model: name, SubDirs: subDirs})
 		}
 	}
 
@@ -230,21 +193,17 @@ func ListReferenceAudioFiles(rootDir string) (string, error) {
 		return "", err
 	}
 
-	audioList := AudioRefList{
-		Models: models,
-	}
-
-	jsonData, err := json.MarshalIndent(audioList, "", "  ")
+	data, err := json.MarshalIndent(AudioRefList{Models: models}, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("JSON序列化失败: %w", err)
 	}
 
-	return string(jsonData), nil
+	return string(data), nil
 }
 
-// SaveReferenceAudioListToFile 将音频参考列表保存到指定文件
+// SaveReferenceAudioListToFile 将音频参考列表保存到文件
 func SaveReferenceAudioListToFile(rootDir, outputPath string) error {
-	jsonData, err := ListReferenceAudioFiles(rootDir)
+	data, err := ListReferenceAudioFiles(rootDir)
 	if err != nil {
 		return err
 	}
@@ -255,7 +214,7 @@ func SaveReferenceAudioListToFile(rootDir, outputPath string) error {
 	}
 
 	// 写入文件
-	if err := os.WriteFile(outputPath, []byte(jsonData), FilePermission); err != nil {
+	if err := os.WriteFile(outputPath, []byte(data), FilePermission); err != nil {
 		return fmt.Errorf("写入文件失败: %w", err)
 	}
 
