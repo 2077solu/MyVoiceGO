@@ -10,4 +10,5 @@ type PreDialogue struct {
 	Expression string `json:"expression"`
 	Model      string `json:"model"`
 	Tone       string `json:"tone"`
+	AudioId    string `json:"audioid"`
 }
